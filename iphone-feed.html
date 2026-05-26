@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iPhone Feed</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: system-ui, sans-serif;
+    overflow: hidden;
+  }
+
+  .iphone {
+    position: relative;
+    width: 375px;
+    height: 812px;
+    background: #111;
+    border-radius: 55px;
+    border: 2px solid #2a2a2a;
+    box-shadow:
+      0 0 0 1px #1a1a1a,
+      inset 0 0 0 2px #222,
+      0 40px 120px rgba(0,0,0,0.9),
+      0 0 60px rgba(255,255,255,0.03);
+    overflow: hidden;
+  }
+
+  .iphone::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 120px;
+    width: 4px;
+    height: 36px;
+    background: #1c1c1c;
+    border-radius: 2px 0 0 2px;
+    box-shadow: 0 48px 0 #1c1c1c, 0 88px 0 #1c1c1c;
+    z-index: 200;
+  }
+  .iphone::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: 150px;
+    width: 4px;
+    height: 68px;
+    background: #1c1c1c;
+    border-radius: 0 2px 2px 0;
+    z-index: 200;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    border-radius: 54px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  /* Bokeh background */
+  .bokeh-bg {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .bokeh-bg canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .dynamic-island {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 34px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 100;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 58px;
+    z-index: 90;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 28px 8px;
+    color: #000;
+    font-size: 13px;
+    font-weight: 600;
+    pointer-events: none;
+  }
+  .status-bar .time {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .status-icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .status-icons svg { fill: #000; }
+
+  .feed {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 10;
+  }
+
+  .slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    background: transparent;
+  }
+
+  .slide img,
+  .slide object,
+  .slide embed {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .slide svg-wrap {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .slide-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px 90px;
+  }
+
+  .slide-inner img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .flash {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.15);
+    z-index: 80;
+    opacity: 0;
+    pointer-events: none;
+    border-radius: 54px;
+    transition: opacity 0.1s;
+  }
+  .flash.active { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="iphone">
+  <div class="screen">
+
+    <!-- Bokeh background -->
+    <div class="bokeh-bg">
+      <canvas id="bokehCanvas"></canvas>
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <div class="time">9:41</div>
+      <div class="status-icons">
+        <svg width="17" height="12" viewBox="0 0 17 12">
+          <rect x="0" y="6" width="3" height="6" rx="1"/>
+          <rect x="4.5" y="4" width="3" height="8" rx="1"/>
+          <rect x="9" y="2" width="3" height="10" rx="1"/>
+          <rect x="13.5" y="0" width="3" height="12" rx="1"/>
+        </svg>
+        <svg width="16" height="12" viewBox="0 0 16 12">
+          <path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/>
+          <path d="M3.5 6C5 4.3 6.4 3.5 8 3.5S11 4.3 12.5 6" stroke="#000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M1 3C3.2 1.1 5.5 0 8 0s4.8 1.1 7 3" stroke="#000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        </svg>
+        <svg width="25" height="12" viewBox="0 0 25 12">
+          <rect x="0" y="1" width="21" height="10" rx="3" stroke="#000" stroke-width="1.2" fill="none"/>
+          <rect x="1.5" y="2.5" width="16" height="7" rx="2" fill="#000"/>
+          <path d="M22.5 4v4a2 2 0 0 0 0-4z" fill="#000" opacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Dynamic island -->
+    <div class="dynamic-island"></div>
+
+    <!-- Feed -->
+    <div class="feed" id="feed"></div>
+
+    <!-- Flash effect -->
+    <div class="flash" id="flash"></div>
+  </div>
+</div>
+
+<script>
+  // ── Bokeh background ─────────────────────────────────────────
+  const canvas = document.getElementById('bokehCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    const parent = canvas.parentElement;
+    canvas.width = parent.offsetWidth;
+    canvas.height = parent.offsetHeight;
+    drawBokeh();
+  }
+
+  function drawBokeh() {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, w, h);
+
+    const color = '203, 223, 162'; // #cbdfa2
+    const dots = [];
+    const count = 28;
+
+    for (let i = 0; i < count; i++) {
+      dots.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: 18 + Math.random() * 55,
+        a: 0.08 + Math.random() * 0.18
+      });
+    }
+
+    dots.forEach(d => {
+      const grad = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r);
+      grad.addColorStop(0,   `rgba(${color}, ${d.a})`);
+      grad.addColorStop(0.5, `rgba(${color}, ${d.a * 0.5})`);
+      grad.addColorStop(1,   `rgba(${color}, 0)`);
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    });
+  }
+
+  resizeCanvas();
+
+  // ── SVG slides (inline paths) ─────────────────────────────────
+  const svgPaths = [
+    '/mnt/user-data/uploads/Nostalgia-4.svg',
+    '/mnt/user-data/uploads/Nostalgia-12.svg',
+    '/mnt/user-data/uploads/Nostalgia-19.svg',
+    '/mnt/user-data/uploads/Nostalgia-20.svg',
+    '/mnt/user-data/uploads/Nostalgia-21.svg',
+    '/mnt/user-data/uploads/Nostalgia-25.svg',
+    '/mnt/user-data/uploads/Nostalgia-40.svg',
+  ];
+
+  const feed = document.getElementById('feed');
+  const flash = document.getElementById('flash');
+
+  let current = 0;
+  let animating = false;
+
+  svgPaths.forEach((src, i) => {
+    const div = document.createElement('div');
+    div.className = 'slide';
+    div.id = `slide-${i}`;
+    div.style.transform = i === 0 ? 'translateY(0%)' : 'translateY(100%)';
+
+    const inner = document.createElement('div');
+    inner.className = 'slide-inner';
+
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = `Slide ${i + 1}`;
+
+    inner.appendChild(img);
+    div.appendChild(inner);
+    feed.appendChild(div);
+  });
+
+  function goTo(next) {
+    if (animating) return;
+    if (next < 0 || next >= svgPaths.length) return;
+    animating = true;
+
+    const dir = next > current ? 1 : -1;
+    const curr = document.getElementById(`slide-${current}`);
+    const nextEl = document.getElementById(`slide-${next}`);
+
+    nextEl.style.transition = 'none';
+    nextEl.style.transform = `translateY(${dir * 100}%)`;
+    nextEl.getBoundingClientRect();
+
+    nextEl.style.transition = 'transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94)';
+    curr.style.transition  = 'transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94)';
+
+    nextEl.style.transform = 'translateY(0%)';
+    curr.style.transform   = `translateY(${-dir * 100}%)`;
+
+    flash.classList.add('active');
+    setTimeout(() => flash.classList.remove('active'), 80);
+
+    current = next;
+    setTimeout(() => { animating = false; }, 480);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); goTo(current + 1); }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); goTo(current - 1); }
+  });
+</script>
+</body>
+</html>
