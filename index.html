@@ -185,6 +185,121 @@
     transition: opacity 0.1s;
   }
   .flash.active { opacity: 1; }
+ /* floating nostalgia tags */
+.floating-tags {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.tag {
+  position: absolute;
+  bottom: -40px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1.1px solid #28333f;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(8px);
+  font-family: 'Apercu-Mono', monospace;
+  font-size: 11px;
+  color: #28333f;
+  letter-spacing: 0.04em;
+  box-shadow:
+    0 2px 0 rgba(40,51,63,0.15),
+    0 0 12px rgba(255,255,255,0.4);
+  animation: floatUp linear infinite;
+  opacity: 0.85;
+}
+
+/* pastel variants */
+.tag:nth-child(odd) {
+  background: rgba(255, 225, 236, 0.75);
+}
+
+.tag:nth-child(even) {
+  background: rgba(227, 238, 252, 0.75);
+}
+
+.tag:nth-child(3n) {
+  background: rgba(227, 246, 236, 0.75);
+}
+
+/* positions + timings */
+.tag:nth-child(1) {
+  left: 8%;
+  animation-duration: 14s;
+  animation-delay: 0s;
+}
+
+.tag:nth-child(2) {
+  left: 22%;
+  animation-duration: 18s;
+  animation-delay: 2s;
+}
+
+.tag:nth-child(3) {
+  left: 38%;
+  animation-duration: 15s;
+  animation-delay: 5s;
+}
+
+.tag:nth-child(4) {
+  left: 55%;
+  animation-duration: 20s;
+  animation-delay: 1s;
+}
+
+.tag:nth-child(5) {
+  left: 70%;
+  animation-duration: 17s;
+  animation-delay: 4s;
+}
+
+.tag:nth-child(6) {
+  left: 82%;
+  animation-duration: 13s;
+  animation-delay: 7s;
+}
+
+.tag:nth-child(7) {
+  left: 15%;
+  animation-duration: 16s;
+  animation-delay: 9s;
+}
+
+.tag:nth-child(8) {
+  left: 48%;
+  animation-duration: 19s;
+  animation-delay: 6s;
+}
+
+.tag:nth-child(9) {
+  left: 76%;
+  animation-duration: 14s;
+  animation-delay: 3s;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) rotate(-2deg);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.9;
+  }
+
+  50% {
+    transform: translateY(-45vh) rotate(2deg);
+  }
+
+  100% {
+    transform: translateY(-110vh) rotate(-3deg);
+    opacity: 0;
+  }
+}
 </style>
 </head>
 <body>
